@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<robot name="myfirst">
+    <!-- Materials -->
+    <material name="blue">
+        <color rgba="0 0 0.8 1"/>
+    </material>
+    <material name="red">
+        <color rgba="1 0 0 1"/>
+    </material>
+    <material name="black">
+        <color rgba="0 0 0 1"/>
+    </material>
+    <material name="grey">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+    </material>
+
+    <!-- Body of Robot -->
+    <link name="base_link">
+        <visual>
+            <geometry>
+                <box size=".24 0.20 .08"/>
+            </geometry>
+            <material name="grey"/>
+        </visual>
+    </link>
+
+    <!-- Example of a joint and link definition -->
+    <link name="right_front_suspension">
+        <visual>
+            <origin rpy=".5 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder length="0.2" radius="0.010"/>
+            </geometry>
+            <material name="red"/>
+        </visual>
+    </link>
+
+    <joint name="right_front_base_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="right_front_suspension"/>
+        <origin xyz="-0.07 0.14 0.12"/>
+    </joint>
+
+    <!-- Additional links and joints should follow the same structure -->
+
+    <!-- Example wheel link -->
+    <link name="wheel_joint">
+        <visual>
+            <origin rpy="1.585 0 0" xyz=".13 0 0"/>
+            <geometry>
+                <cylinder length="0.05" radius="0.08"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+    </link>
+
+    <joint name="wheeler_joint" type="fixed">
+        <parent link="right_front_suspension"/>
+        <child link="wheel_joint"/>
+        <origin xyz="-0.15 0.05 -0.03"/>
+    </joint>
+
+    <!-- Repeat the above structure for all your links and joints -->
+
+</robot>
