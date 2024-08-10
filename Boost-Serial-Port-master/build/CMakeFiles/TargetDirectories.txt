@@ -1,0 +1,3 @@
+/home/rover/Boost-Serial-Port-master/build/CMakeFiles/main.dir
+/home/rover/Boost-Serial-Port-master/build/CMakeFiles/edit_cache.dir
+/home/rover/Boost-Serial-Port-master/build/CMakeFiles/rebuild_cache.dir

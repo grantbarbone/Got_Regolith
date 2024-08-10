@@ -1,0 +1,2 @@
+/usr/bin/ar qc libserial_boost.a CMakeFiles/serial_boost.dir/BoostSerial.cpp.o
+/usr/bin/ranlib libserial_boost.a
