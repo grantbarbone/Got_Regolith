@@ -27,12 +27,12 @@
 #include <functional>
 #include <memory>
 #include <string>
-
+//#include <Python.h>
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/u_int16_multi_array.hpp"
 #include "std_msgs/msg/bool.hpp"
-#include "std_msgs/msg/float32.hpp"
+#include "std_msgs/msg/float32_multi_array.hpp"
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
@@ -49,7 +49,7 @@ class Main : public rclcpp::Node {
    * @brief Construct a new Minimal Publisher object
    *
    */
-  Main() : Node("Main_PubSub"), count_(0) {
+  Main() : Node("Main_PubSub") {
     zed_publisher_ = this->create_publisher<std_msgs::msg::Bool>("topic_Main_to_Zed", 10);
 
     zed_subscription_ = this->create_subscription<std_msgs::msg::UInt16MultiArray>(
@@ -68,15 +68,15 @@ class Main : public rclcpp::Node {
     radar_timer_ = this->create_wall_timer(
         500ms, std::bind(&Main::radar_timer_callback, this));
     
-    radar_subscription_ = this->create_subscription<std_msgs::msg::UInt16MultiArray>(
+    radar_subscription_ = this->create_subscription<std_msgs::msg::Float32MultiArray>(
       "topic_Radar_to_Main", 10, std::bind(&Main::radar_topic_callback, this, std::placeholders::_1)); 
 
-    graph_algorithm_publisher_ = this->create_publisher<std_msgs::msg::Float32>("topic_Main_to_Graph_Algorithm", 10);
+    graph_algorithm_publisher_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("topic_Main_to_Graph_Algorithm", 10);
     graph_algorithm_timer_ = this->create_wall_timer(
         500ms, std::bind(&Main::graph_algorithm_timer_callback, this));
-    graph_algorithm_subscription_ = this->create_subscription<std_msgs::msg::UInt16MultiArray>(
-      "topic_Graph_Algorithm_to_Main", 10, std::bind(&Main::graph_algorithm_topic_callback, this, std::placeholders::_1));  
-    
+    graph_algorithm_subscription_ = this->create_subscription<std_msgs::msg::Float32MultiArray>(
+     "topic_Graph_Algorithm_to_Main", 10, std::bind(&Main::graph_algorithm_topic_callback, this, std::placeholders::_1));  
+  
     motor_controls_publisher_ = this->create_publisher<std_msgs::msg::UInt16MultiArray>("topic_Main_to_Motor_Controls", 10);
     
     motor_controls_timer_ = this->create_wall_timer(
@@ -205,10 +205,19 @@ class Main : public rclcpp::Node {
     radar_publisher_->publish(message);
     stop_publishing_radar(); 
   }
+
 void graph_algorithm_timer_callback() {
-    auto message = std_msgs::msg::Float32();
-    message.data = 32.0;
-    RCLCPP_INFO(this->get_logger(), "Publishing to Node Graph_Algorithm: [%f]", message.data);
+    auto message = std_msgs::msg::Float32MultiArray();
+    // Populate the data array with example float values
+    message.data = {32.0, 64.0, 96.0};  // Example data
+
+    // Log each element of the array
+    std::string data_str;
+    for (const auto &value : message.data) {
+        data_str += std::to_string(value) + " ";
+    }
+
+    RCLCPP_INFO(this->get_logger(), "Publishing to Node Graph_Algorithm: [%s]", data_str.c_str());
     graph_algorithm_publisher_->publish(message);
     stop_publishing_graph_algorithm(); 
 }
@@ -225,7 +234,7 @@ void graph_algorithm_timer_callback() {
 
   void battery_timer_callback() {
     auto message = std_msgs::msg::String();
-    message.data = "Message to Node Battery: " + std::to_string(count_++);
+    message.data = "Message to Node Battery: " + std::to_string(1);
     RCLCPP_INFO(this->get_logger(), "Publishing: '%s'", message.data.c_str());
     battery_publisher_->publish(message);
     stop_publishing_battery(); 
@@ -241,14 +250,21 @@ void graph_algorithm_timer_callback() {
     set_lidar_connection(false);
   }
 
-  void radar_topic_callback(const std_msgs::msg::UInt16MultiArray::SharedPtr msg) {
-    RCLCPP_INFO(this->get_logger(), "Received: [%s]", std::to_string(msg->data.size()).c_str());
+  void radar_topic_callback(const std_msgs::msg::Float32MultiArray::SharedPtr msg) {
+    RCLCPP_INFO(this->get_logger(), "Received Radar array of size: %zu", msg->data.size());
+    for (size_t i = 0; i < msg->data.size(); ++i) {
+        RCLCPP_INFO(this->get_logger(), "Element %zu: %f", i, msg->data[i]);
+    }
     set_radar_connection(false);
   }
 
-  void graph_algorithm_topic_callback(const std_msgs::msg::UInt16MultiArray::SharedPtr msg) {
-    RCLCPP_INFO(this->get_logger(), "Received: [%s]", std::to_string(msg->data.size()).c_str());
-  }
+void graph_algorithm_topic_callback(const std_msgs::msg::Float32MultiArray::SharedPtr msg) {
+    RCLCPP_INFO(this->get_logger(), "Received Graph Algorithm array of size: %zu", msg->data.size());
+    for (size_t i = 0; i < msg->data.size(); ++i) {
+        RCLCPP_INFO(this->get_logger(), "Element %zu: %f", i, msg->data[i]);
+    }
+}
+
   void motor_controls_topic_callback(const std_msgs::msg::Bool::SharedPtr msg) {
     
     RCLCPP_INFO(this->get_logger(), "Received: '%s'", msg->data ? "true" : "false");
@@ -272,10 +288,10 @@ void graph_algorithm_timer_callback() {
   rclcpp::Subscription<std_msgs::msg::UInt16MultiArray>::SharedPtr lidar_subscription_;
 
   rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr radar_publisher_;
-  rclcpp::Subscription<std_msgs::msg::UInt16MultiArray>::SharedPtr radar_subscription_;
+  rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr radar_subscription_;
 
-  rclcpp::Publisher<std_msgs::msg::UInt16MultiArray>::SharedPtr graph_algorithm_publisher_;
-  rclcpp::Subscription<std_msgs::msg::UInt16MultiArray>::SharedPtr graph_algorithm_subscription_;
+  rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr graph_algorithm_publisher_;
+  rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr graph_algorithm_subscription_;
 
   rclcpp::Publisher<std_msgs::msg::UInt16MultiArray>::SharedPtr motor_controls_publisher_;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr motor_controls_subscription_;
@@ -283,7 +299,6 @@ void graph_algorithm_timer_callback() {
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr battery_publisher_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr battery_subscription_;
 
-  size_t count_;
   bool zed_connection;
   bool lidar_connection;
   bool radar_connection;
@@ -328,6 +343,7 @@ int main(int argc, char* argv[]) {
         rclcpp::spin_some(node);
         if (node->get_zed_connection()){
           //std::cout<< "Change to Zed" <<std::endl;
+          
           Initial_state=Zed_State;
         }
         else if (node->get_lidar_connection()){

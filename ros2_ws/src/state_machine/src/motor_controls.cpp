@@ -163,10 +163,21 @@ class Motor_Controls : public rclcpp::Node {
     x_coordinate=next_x_coordinate-x_coordinate;
     y_coordinate=next_y_coordinate-y_coordinate;
     uint16_t angular_position=std::sqrt(std::pow(x_coordinate,2)+std::pow(y_coordinate,2));
+    
     double angle_radians = atan2(y_coordinate, x_coordinate);
+      
     std::cout<< angle_radians <<std::endl;
     // Convert the angle to degrees
     uint16_t angular_directoin = angle_radians * (180.0 / M_PI);
+    if (x_coordinate<0  &&  !(y_coordinate<0)){
+      angular_directoin= angular_directoin+90;
+    }
+    else if (x_coordinate<0 && y_coordinate<0 ){
+      angular_directoin= angular_directoin+180;
+    }
+    else if (!(x_coordinate<0) && y_coordinate<0){
+      angular_directoin= angular_directoin+270;
+    }
     RCLCPP_INFO(this->get_logger(), "Received angular_position and angular_direction: 0x%04X 0x%04X", angular_position, angular_directoin);
     auto start_time = std::chrono::high_resolution_clock::now();
     start_publishing();
