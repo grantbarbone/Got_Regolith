@@ -13,6 +13,15 @@ find_package(Boost 1.74 REQUIRED COMPONENTS filesystem system)
 find_package(Threads REQUIRED)
 find_package(Python3 REQUIRED COMPONENTS Development)
 find_package(visualization_msgs REQUIRED)
+find_package(ZED 3 REQUIRED)
+find_package(CUDA ${ZED_CUDA_VERSION} REQUIRED)
+
+include_directories(${CUDA_INCLUDE_DIRS})
+include_directories(${ZED_INCLUDE_DIRS})
+
+link_directories(${ZED_LIBRARY_DIR})
+link_directories(${CUDA_LIBRARY_DIRS})
+
 #find_package(Python3 REQUIRED COMPONENTS Development)
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -30,15 +39,23 @@ add_executable(main_subpub src/main.cpp)
 target_link_libraries(main_subpub Python3::Python)
 ament_target_dependencies(main_subpub rclcpp std_msgs)
 
-
 add_executable(zed_subpub src/zed.cpp)
+if (LINK_SHARED_ZED)
+    SET(ZED_LIBS ${ZED_LIBRARIES} ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY})
+else()
+    SET(ZED_LIBS ${ZED_STATIC_LIBRARIES} ${CUDA_CUDA_LIBRARY} ${CUDA_LIBRARY})
+endif()
+
+# Link CUDA libraries
+target_link_libraries(zed_subpub ${ZED_LIBS})
 ament_target_dependencies(zed_subpub rclcpp std_msgs)
+
 
  #add_executable(graph_algorithm_subpub src/graph_algorithm.cpp)
  #ament_target_dependencies(graph_algorithm_subpub rclcpp std_msgs visualization_msgs)
 
- add_executable(simple_rviz2_node src/simple_rviz2_node.cpp)
- ament_target_dependencies(simple_rviz2_node rclcpp visualization_msgs)
+add_executable(simple_rviz2_node src/simple_rviz2_node.cpp)
+ament_target_dependencies(simple_rviz2_node rclcpp visualization_msgs)
 
 add_executable(motor_controls_subpub src/motor_controls.cpp)
 target_link_libraries(motor_controls_subpub Threads::Threads)
@@ -75,10 +92,10 @@ install(
   DIRECTORY launch/
   DESTINATION share/${PROJECT_NAME}/launch
 )
-install(
-  PROGRAMS
-    /home/parallels/ros2_ws/src/python_applications/python_applications/graph_algorithm.py
-  DESTINATION lib/${PROJECT_NAME}
-)
+#install(
+#  PROGRAMS
+#    /home/parallels/ros2_ws/src/python_applications/python_applications/graph_algorithm.py
+#  DESTINATION lib/${PROJECT_NAME}
+#)
 
 ament_package()

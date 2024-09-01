@@ -354,11 +354,11 @@ int main(int argc, char* argv[]) {
     // Assuming Zed is an instance of a class that provides these methods
     //ZedClass Zed;
     bool open_camera_bool = true; // Example flag
-    std::vector<uint16_t> combined_data;
+    //std::vector<uint16_t> combined_data;
     
-    size_t depth_data_size = 3;  // x, y, z
-    size_t object_detection_data_size = 8;  // 4 points, each with x, y
-    size_t IMU_data_size = 10;  // 3 linear_acceleration, 3 angular_velocity, 4 orientation
+    //size_t depth_data_size = 3;  // x, y, z
+    //size_t object_detection_data_size = 8;  // 4 points, each with x, y
+    //size_t IMU_data_size = 10;  // 3 linear_acceleration, 3 angular_velocity, 4 orientation
 
     rclcpp::spin_some(node);
     while (rclcpp::ok() && open_camera_bool) {
@@ -371,18 +371,18 @@ int main(int argc, char* argv[]) {
             // Sizes of each array
 
             // Generate random data
-            std::vector<uint16_t> depth_data = generate_random_uint16(depth_data_size);
-            std::vector<uint16_t> object_detection_data = generate_random_uint16(object_detection_data_size);
-            std::vector<uint16_t> IMU_data = generate_random_uint16(IMU_data_size);
+      //      std::vector<uint16_t> depth_data = generate_random_uint16(depth_data_size);
+      //      std::vector<uint16_t> object_detection_data = generate_random_uint16(object_detection_data_size);
+      //      std::vector<uint16_t> IMU_data = generate_random_uint16(IMU_data_size);
 
             //Check if combined_data is empty
-            if (!node->set_combine_data(depth_data, object_detection_data, IMU_data)) {
-                std::cout << "Combined data is empty." << std::endl;
+ //           if (!node->set_combine_data(depth_data, object_detection_data, IMU_data)) {
+   //             std::cout << "Combined data is empty." << std::endl;
                 // Additional logic if combined_data is empty
                 //Zed.zed_close();
-                rclcpp::shutdown();
-                return EXIT_FAILURE;
-            }
+     //           rclcpp::shutdown();
+       //         return EXIT_FAILURE;
+         //   }
             
             node->start_publishing();
             rclcpp::spin_some(node);

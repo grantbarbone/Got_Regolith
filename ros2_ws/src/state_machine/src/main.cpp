@@ -77,7 +77,7 @@ class Main : public rclcpp::Node {
     graph_algorithm_subscription_ = this->create_subscription<std_msgs::msg::Float32MultiArray>(
      "topic_Graph_Algorithm_to_Main", 10, std::bind(&Main::graph_algorithm_topic_callback, this, std::placeholders::_1));  
   
-    motor_controls_publisher_ = this->create_publisher<std_msgs::msg::UInt16MultiArray>("topic_Main_to_Motor_Controls", 10);
+    motor_controls_publisher_ = this->create_publisher<std_msgs::msg::Float32MultiArray>("topic_Main_to_Motor_Controls", 10);
     
     motor_controls_timer_ = this->create_wall_timer(
         500ms, std::bind(&Main::motor_controls_timer_callback, this));
@@ -223,9 +223,9 @@ void graph_algorithm_timer_callback() {
 }
 
   void motor_controls_timer_callback() {
-    auto message = std_msgs::msg::UInt16MultiArray();
-    uint16_t x_coordinate = 10;
-    uint16_t y_coordinate = 20;
+    auto message = std_msgs::msg::Float32MultiArray();
+    float x_coordinate = 1;
+    float y_coordinate = 1;
     message.data = {x_coordinate, y_coordinate};
     RCLCPP_INFO(this->get_logger(), "Publishing to Node Motor_Controls: [%s]", std::to_string(message.data.size()).c_str());
     motor_controls_publisher_->publish(message);
@@ -293,7 +293,7 @@ void graph_algorithm_topic_callback(const std_msgs::msg::Float32MultiArray::Shar
   rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr graph_algorithm_publisher_;
   rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr graph_algorithm_subscription_;
 
-  rclcpp::Publisher<std_msgs::msg::UInt16MultiArray>::SharedPtr motor_controls_publisher_;
+  rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr motor_controls_publisher_;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr motor_controls_subscription_;
   
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr battery_publisher_;
