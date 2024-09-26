@@ -11,16 +11,7 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(Boost 1.74 REQUIRED COMPONENTS filesystem system)
 find_package(Threads REQUIRED)
-find_package(Python3 REQUIRED COMPONENTS Development)
 find_package(visualization_msgs REQUIRED)
-find_package(ZED 3 REQUIRED)
-find_package(CUDA ${ZED_CUDA_VERSION} REQUIRED)
-
-include_directories(${CUDA_INCLUDE_DIRS})
-include_directories(${ZED_INCLUDE_DIRS})
-
-link_directories(${ZED_LIBRARY_DIR})
-link_directories(${CUDA_LIBRARY_DIRS})
 
 #find_package(Python3 REQUIRED COMPONENTS Development)
 if(BUILD_TESTING)
@@ -36,23 +27,14 @@ if(BUILD_TESTING)
 endif()
 
 add_executable(main_subpub src/main.cpp)
-target_link_libraries(main_subpub Python3::Python)
 ament_target_dependencies(main_subpub rclcpp std_msgs)
 
 add_executable(zed_subpub src/zed.cpp)
-if (LINK_SHARED_ZED)
-    SET(ZED_LIBS ${ZED_LIBRARIES} ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY})
-else()
-    SET(ZED_LIBS ${ZED_STATIC_LIBRARIES} ${CUDA_CUDA_LIBRARY} ${CUDA_LIBRARY})
-endif()
-
-# Link CUDA libraries
-target_link_libraries(zed_subpub ${ZED_LIBS})
 ament_target_dependencies(zed_subpub rclcpp std_msgs)
 
 
- #add_executable(graph_algorithm_subpub src/graph_algorithm.cpp)
- #ament_target_dependencies(graph_algorithm_subpub rclcpp std_msgs visualization_msgs)
+add_executable(graph_algorithm_subpub src/graph_algorithm.cpp)
+ament_target_dependencies(graph_algorithm_subpub rclcpp std_msgs visualization_msgs)
 
 add_executable(simple_rviz2_node src/simple_rviz2_node.cpp)
 ament_target_dependencies(simple_rviz2_node rclcpp visualization_msgs)
@@ -67,35 +49,23 @@ ament_target_dependencies(battery_subpub rclcpp std_msgs)
 add_executable(lidar_subpub src/lidar.cpp)
 ament_target_dependencies(lidar_subpub rclcpp std_msgs)
 
-# add_executable(radar_subpub src/radar.cpp)
-# ament_target_dependencies(radar_subpub rclcpp std_msgs)
-
 # add_executable(topic_main_to_motor_controls src/topic_main_to_motor_controls.cpp)
 # ament_target_dependencies(topic_main_to_motor_controls rclcpp std_msgs)
 
-# add_executable(publisher src/publisher.cpp)
-# ament_target_dependencies(publisher rclcpp std_msgs)
 
 install(TARGETS
   main_subpub
-  zed_subpub
+  #zed_subpub
   lidar_subpub
   simple_rviz2_node
-  # graph_algorithm_subpub
+  graph_algorithm_subpub
   motor_controls_subpub
   battery_subpub
-  #radar_subpub
-  # topic_main_to_motor_controls
-  # publisher
   DESTINATION lib/${PROJECT_NAME})
 install(
   DIRECTORY launch/
   DESTINATION share/${PROJECT_NAME}/launch
 )
-#install(
-#  PROGRAMS
-#    /home/parallels/ros2_ws/src/python_applications/python_applications/graph_algorithm.py
-#  DESTINATION lib/${PROJECT_NAME}
-#)
+
 
 ament_package()

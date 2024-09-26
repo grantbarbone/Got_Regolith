@@ -1,33 +1,9 @@
-// Copyright 2016 Open Source Robotics Foundation, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-/**
- * @file publisher_member_function.cpp
- * @author Jay Prajapati (jayp@umd.edu)
- * @brief create a minimal publisher for ROS2
- * @version 0.1
- * @date 2023-11-06
- *
- * @copyright Copyright (c) 2023
- *
- */
-
 #include <chrono>
 #include <functional>
 #include <memory>
 #include <string>
-//#include <Python.h>
+#include <iostream>
+#include <fstream>
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/u_int16_multi_array.hpp"
@@ -168,19 +144,26 @@ class Main : public rclcpp::Node {
     return radar_connection;
   }
 
+  //Make a function void set_zed_data and void get_zed_data
+  void set_zed_data(std::vector<float> zed_data)
+  {
+    zed_data_to_ros = zed_data;
+  }
+
+  std::vector<float> get_zed_data()
+  {
+    return zed_data_to_ros;
+  }
+
+
  private:
   /**
    * @brief callback function
    *
    */
 
-  std::string data;
-  void set_data(const std::string& input_data) {
-     data=input_data;// or perform some processing
-  }
-  std::string get_data() {
-    return data; // or perform some processing
-  }
+
+
 
   void zed_timer_callback() {
     auto message = std_msgs::msg::Bool();
@@ -209,8 +192,8 @@ class Main : public rclcpp::Node {
 void graph_algorithm_timer_callback() {
     auto message = std_msgs::msg::Float32MultiArray();
     // Populate the data array with example float values
-    message.data = {32.0, 64.0, 96.0};  // Example data
-
+    message.data = get_zed_data(); // Example data
+    
     // Log each element of the array
     std::string data_str;
     for (const auto &value : message.data) {
@@ -302,6 +285,7 @@ void graph_algorithm_topic_callback(const std_msgs::msg::Float32MultiArray::Shar
   bool zed_connection;
   bool lidar_connection;
   bool radar_connection;
+  std::vector<float> zed_data_to_ros;
 };
 
 /**
@@ -364,11 +348,32 @@ int main(int argc, char* argv[]) {
       case Zed_State:
       {
       //std::cout<< "In Zed_State" <<std::endl;
-        node->start_publishing_zed();
-        rclcpp::spin_some(node); 
+        //node->start_publishing_zed();
+        //rclcpp::spin_some(node); 
         //TODO
         //
         //
+        system("/home/ros2_ws/src/state_machine/src/bash_launch.sh 0");
+        std::ifstream zed_stream_in("/home/rover/ros2_ws/src/state_machine/temp.txt");
+    if (!zed_stream_in.is_open()) {
+        std::cerr << "Error: Could not open the file." << std::endl;
+        return 1;
+    } else {
+        std::vector<float> zed_data;
+        float zed_data_value;
+        
+        // Read and store the floating-point numbers from the file
+        while (zed_stream_in >> zed_data_value) {
+            zed_data.push_back(zed_data_value);
+        }
+        node->set_zed_data(zed_data);
+        // Optionally print the data to verify
+        for (const float& value : zed_data) {
+            std::cout << value << ", " << std::endl; 
+        }
+
+        zed_stream_in.close(); // Close the file stream
+    }
         Initial_state=Graph_Algorithm_State;
         //std::cout<< "End of Zed_State" <<std::endl;
         continue; 
