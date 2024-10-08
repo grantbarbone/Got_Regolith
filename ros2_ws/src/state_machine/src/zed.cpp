@@ -283,21 +283,21 @@ class Zed : public rclcpp::Node {
   void stop_publishing() {
     zed_timer_->cancel(); // Stop the timer
   }
-  bool set_combine_data(
-    const std::vector<uint16_t>& depth_data,
-    const std::vector<uint16_t>& object_detection_data,
-    const std::vector<uint16_t>& IMU_data)
-    {
-    combined_data.reserve(depth_data.size() + object_detection_data.size() + IMU_data.size());
+  // bool set_combine_data(
+  //   const std::vector<uint16_t>& depth_data,
+  //   const std::vector<uint16_t>& object_detection_data,
+  //   const std::vector<uint16_t>& IMU_data)
+  //   {
+  //   combined_data.reserve(depth_data.size() + object_detection_data.size() + IMU_data.size());
 
-    combined_data.insert(combined_data.end(), depth_data.begin(), depth_data.end());
-    combined_data.insert(combined_data.end(), object_detection_data.begin(), object_detection_data.end());
-    combined_data.insert(combined_data.end(), IMU_data.begin(), IMU_data.end());
-    if (combined_data.empty()){
-        return false;
-    }
-    return true;
-    }
+  //   combined_data.insert(combined_data.end(), depth_data.begin(), depth_data.end());
+  //   combined_data.insert(combined_data.end(), object_detection_data.begin(), object_detection_data.end());
+  //   combined_data.insert(combined_data.end(), IMU_data.begin(), IMU_data.end());
+  //   if (combined_data.empty()){
+  //       return false;
+  //   }
+  //   return true;
+  //   }
  private:
   /**
    * @brief callback function for the topic
@@ -324,6 +324,7 @@ class Zed : public rclcpp::Node {
   rclcpp::Publisher<std_msgs::msg::UInt16MultiArray>::SharedPtr publisher_;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr subscription_;
   size_t count_;
+  //Float32MultiArray
 };
 
 std::vector<uint16_t> generate_random_uint16(size_t size) {

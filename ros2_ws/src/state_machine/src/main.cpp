@@ -168,7 +168,7 @@ class Main : public rclcpp::Node {
   void zed_timer_callback() {
     auto message = std_msgs::msg::Bool();
     message.data = true;
-    RCLCPP_INFO(this->get_logger(), "Publishing to Node Zed: '%s'", message.data ? "true" : "false");
+    //RCLCPP_INFO(this->get_logger(), "Publishing to Node Zed: '%s'", message.data ? "true" : "false");
     zed_publisher_->publish(message);
     stop_publishing_zed(); 
   }
@@ -176,7 +176,7 @@ class Main : public rclcpp::Node {
   void lidar_timer_callback() {
     auto message = std_msgs::msg::Bool();
     message.data = true;
-    RCLCPP_INFO(this->get_logger(), "Publishing to Node Lidar: '%s'", message.data ? "true" : "false");
+    //RCLCPP_INFO(this->get_logger(), "Publishing to Node Lidar: '%s'", message.data ? "true" : "false");
     lidar_publisher_->publish(message);
     stop_publishing_lidar(); 
   }
@@ -184,7 +184,7 @@ class Main : public rclcpp::Node {
   void radar_timer_callback() {
     auto message = std_msgs::msg::Bool();
     message.data = true;
-    RCLCPP_INFO(this->get_logger(), "Publishing to Node Radar: '%s'", message.data ? "true" : "false");
+    //RCLCPP_INFO(this->get_logger(), "Publishing to Node Radar: '%s'", message.data ? "true" : "false");
     radar_publisher_->publish(message);
     stop_publishing_radar(); 
   }
@@ -218,33 +218,33 @@ void graph_algorithm_timer_callback() {
   void battery_timer_callback() {
     auto message = std_msgs::msg::String();
     message.data = "Message to Node Battery: " + std::to_string(1);
-    RCLCPP_INFO(this->get_logger(), "Publishing: '%s'", message.data.c_str());
+    //RCLCPP_INFO(this->get_logger(), "Publishing: '%s'", message.data.c_str());
     battery_publisher_->publish(message);
     stop_publishing_battery(); 
   }
   
   void zed_topic_callback(const std_msgs::msg::UInt16MultiArray::SharedPtr msg) {
-    RCLCPP_INFO(this->get_logger(), "Received: [%s]", std::to_string(msg->data.size()).c_str());
+    //RCLCPP_INFO(this->get_logger(), "Received: [%s]", std::to_string(msg->data.size()).c_str());
     set_zed_connection(true);
   }
   
   void lidar_topic_callback(const std_msgs::msg::UInt16MultiArray::SharedPtr msg) {
-    RCLCPP_INFO(this->get_logger(), "Received: [%s]", std::to_string(msg->data.size()).c_str());
+    //RCLCPP_INFO(this->get_logger(), "Received: [%s]", std::to_string(msg->data.size()).c_str());
     set_lidar_connection(false);
   }
 
   void radar_topic_callback(const std_msgs::msg::Float32MultiArray::SharedPtr msg) {
-    RCLCPP_INFO(this->get_logger(), "Received Radar array of size: %zu", msg->data.size());
-    for (size_t i = 0; i < msg->data.size(); ++i) {
-        RCLCPP_INFO(this->get_logger(), "Element %zu: %f", i, msg->data[i]);
-    }
+    //RCLCPP_INFO(this->get_logger(), "Received Radar array of size: %zu", msg->data.size());
+    //for (size_t i = 0; i < msg->data.size(); ++i) {
+    //    RCLCPP_INFO(this->get_logger(), "Element %zu: %f", i, msg->data[i]);
+    //}
     set_radar_connection(false);
   }
 
 void graph_algorithm_topic_callback(const std_msgs::msg::Float32MultiArray::SharedPtr msg) {
     RCLCPP_INFO(this->get_logger(), "Received Graph Algorithm array of size: %zu", msg->data.size());
     for (size_t i = 0; i < msg->data.size(); ++i) {
-        RCLCPP_INFO(this->get_logger(), "Element %zu: %f", i, msg->data[i]);
+        RCLCPP_INFO(this->get_logger(), "Coord %zu: %f", i, msg->data[i]);
     }
 }
 
@@ -255,7 +255,7 @@ void graph_algorithm_topic_callback(const std_msgs::msg::Float32MultiArray::Shar
   }
 
   void battery_topic_callback(const std_msgs::msg::String::SharedPtr msg) {
-    RCLCPP_INFO(this->get_logger(), "Received from Node Battery: '%s'", msg->data.c_str() );
+    //RCLCPP_INFO(this->get_logger(), "Received from Node Battery: '%s'", msg->data.c_str() );
   }
   rclcpp::TimerBase::SharedPtr zed_timer_;
   rclcpp::TimerBase::SharedPtr lidar_timer_;
@@ -347,32 +347,30 @@ int main(int argc, char* argv[]) {
       }
       case Zed_State:
       {
-      //std::cout<< "In Zed_State" <<std::endl;
         //node->start_publishing_zed();
         //rclcpp::spin_some(node); 
-        //TODO
-        //
-        //
-        system("/home/ros2_ws/src/state_machine/src/bash_launch.sh 0");
-        std::ifstream zed_stream_in("/home/rover/ros2_ws/src/state_machine/temp.txt");
-    if (!zed_stream_in.is_open()) {
-        std::cerr << "Error: Could not open the file." << std::endl;
-        return 1;
-    } else {
-        std::vector<float> zed_data;
-        float zed_data_value;
-        
-        // Read and store the floating-point numbers from the file
-        while (zed_stream_in >> zed_data_value) {
-            zed_data.push_back(zed_data_value);
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1000));      
+        system("cd /home/rover/Downloads/zed-sdk/tutorials/tutorial\\ 1\\ -\\ hello\\ ZED/cpp/build && ./ZED_Tutorial_1");
+        while(true){
+          //std::cout<< "Data is stuck" <<std::endl; 
+          std::ifstream zed_stream_in("/home/rover/ros2_ws/src/state_machine/temp.txt");
+          //std::this_thread::sleep_for(std::chrono::milliseconds(1000)); 
+          if (!zed_stream_in.is_open()) {
+            std::cerr << "Error: Could not open the file." << std::endl;
+            return 1;
+          } else {
+          std::vector<float> zed_data;
+          float zed_data_value;
+          // Read and store the floating-point numbers from the file
+          while (zed_stream_in >> zed_data_value ) {
+              zed_data.push_back(zed_data_value);
+          }
+          if (zed_data.size()!=0){
+            node->set_zed_data(zed_data);
+            break;
+          }
+          zed_stream_in.close(); // Close the file stream
         }
-        node->set_zed_data(zed_data);
-        // Optionally print the data to verify
-        for (const float& value : zed_data) {
-            std::cout << value << ", " << std::endl; 
-        }
-
-        zed_stream_in.close(); // Close the file stream
     }
         Initial_state=Graph_Algorithm_State;
         //std::cout<< "End of Zed_State" <<std::endl;
@@ -392,26 +390,17 @@ int main(int argc, char* argv[]) {
       }
       case Radar_State: 
       {
-        //std::cout<< "In Radar_State" <<std::endl;
         node->start_publishing_lidar();
         rclcpp::spin_some(node); 
-        //TODO
-        //
-        //
+        node->get_zed_data();
         Initial_state=Graph_Algorithm_State;
-        //std::cout<< "End of Radar_State" <<std::endl;
         continue;
       }
       case Graph_Algorithm_State: 
       {
-        //std::cout<< "In Graph_Algorithm_State" <<std::endl;
         node->start_publishing_graph_algorithm();
         rclcpp::spin_some(node); 
-        //TODO
-        //
-        //
         Initial_state=Battery_State;
-        //std::cout<< "End_Of_Graph_Algorithm_State" <<std::endl;
         continue;
       }
       case Battery_State: 
@@ -422,9 +411,6 @@ int main(int argc, char* argv[]) {
         
         node->start_publishing_battery();
         rclcpp::spin_some(node); 
-        //TODO
-        //
-        //
         if (calculated_distance > next_distance) {
           Initial_state = Motor_Controls_State;
         } else {
@@ -455,9 +441,5 @@ int main(int argc, char* argv[]) {
   }
 // Shutdown ROS gracefully
   rclcpp::shutdown();
-
-
-
-  
   return 0;
 }

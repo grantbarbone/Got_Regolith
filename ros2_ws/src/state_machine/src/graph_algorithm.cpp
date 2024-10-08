@@ -23,16 +23,25 @@ using std::placeholders::_1; //name place ros2
 
 struct Vertex { //Vertex struct.
     float x, y; //x and y.
+    float current_velocity; //current velocity.
+    float delta_velocity; //change in velocity.
+    float initial_velocity; //previous velocity.
+    float current_accleration; //current acceleration.
+    float delta_acceleration; //change in acceleration.
+    float initial_acceleration; //previous acceleration.
     float path_cost; //path cost.
     float euclidean_cost; //euclidean cost.
     float final_cost; //final cost.
     Vertex* parent; //parent pointer.
     bool open, closed, obstacle; //open, closed and obstacle booleans.
-    bool robot_found;
+    bool robot_location; //robot is at this location.
+    bool charging_station_location; //charging station is at this location.
     Vertex(float x, float y, bool obstacle = false) //Vertex instance call
         : x(x), y(y), path_cost(std::numeric_limits<float>::infinity()), //x, y, path cost function creations.
           euclidean_cost(0.0), final_cost(path_cost + euclidean_cost), //euclidean cost, final cost euclidean cost function creation.
-          parent(nullptr), open(false), closed(false), obstacle(obstacle), robot_found(false) {} //parent pointer, open, closed and obstacle boolean. 
+          parent(nullptr), open(false), closed(false), obstacle(obstacle), robot_location(false), //parent pointer, open, closed and obstacle boolean. 
+          current_velocity(0.0), delta_velocity(0.0), initial_velocity(0.0), //current velocity, delta velocity and initial velocity.
+          current_accleration(0.0),  delta_acceleration(0.0), initial_acceleration(0.0) {} //current acceleration, delta acceleration and initial acceleration.
 
     bool operator<(const Vertex& other) const { //operator overloader for priority queue.
         return (path_cost != other.path_cost) ? (path_cost > other.path_cost) : //path cost is not equal to path cost.
@@ -60,6 +69,8 @@ public: //public
     std::priority_queue<Vertex*, std::vector<Vertex*>, CompareVertex> getNeighbors(Vertex* node, Vertex* goal, std::vector<std::vector<Vertex>>& grid); //prototype
 
     std::vector<std::pair<float, float>> a_star_algorithm(Vertex* start, Vertex* goal, std::vector<std::vector<Vertex>> grid); //prototype
+
+    void update_imu_controls( std::vector<float> imu_data, std::vector<std::vector<Vertex>> grid); // prototype
 }; //endclass
 
 /**
@@ -67,6 +78,8 @@ public: //public
  * @param grid 2D vector, with floats.
  * @return 2D vector of Vertexes
  */
+
+
 
 std::vector<std::vector<Vertex>> RoboticPathPlanning::fillGridWithVertices(const std::vector<std::vector<float>>& grid) { //function call
     std::vector<std::vector<Vertex>> vertices_grid; //2D vector of Vertexes
@@ -261,12 +274,12 @@ void timer_callback() {
   void topic_callback(const std_msgs::msg::Float32MultiArray::SharedPtr msg) {
     std::vector<float> recieve_data;
     for (size_t i = 0; i < msg->data.size(); ++i) {
+        //std::cout << msg->data[i] <<std::endl;
         recieve_data.push_back(msg->data[i]);
         //RCLCPP_INFO(this->get_logger(), "Recieving Element %zu: %d", i, msg->data[i]); 
     }
     set_camera_data(recieve_data);
     data_available_ = true; // Set the flag when data is received
-    
   }
 
 
@@ -286,71 +299,83 @@ void timer_callback() {
   Robot_Pathing_State Initial_state= Recieve_State;
 //  Recieve_State, IMU_State, Object_Depth_State, Error_Kinematic_State, Initial_Path_Planning_State, Kinematic_Adjustment_State, Smooth_Out_State, Send_State
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]){
     rclcpp::init(argc, argv);
     // Create an instance of the Graph_Algorithm ROS 2 node
     auto node = std::make_shared<GraphAlgorithm>();
     // Initialize ROS 2
     RoboticPathPlanning robotic;
     std::vector<float> data;
-   
+    std::vector<float> camera_data;
     std::vector<std::vector<float>> grid = {
-                    {0, 0, 0, 0, 0},
-                    {0, 1, 1, 1, 0},
-                    {0, 0, 0, 0, 0},
-                    {0, 1, 1, 1, 0},
-                    {0, 0, 0, 0, 0}
-                };
+        {0, 0, 0, 0, 0},
+        {0, 0, 1, 1, 0},
+        {0, 0, 1, 1, 0},
+        {0, 0, 0, 0, 0},
+        {0, 1, 0, 1, 0},
+        {0, 0, 0, 0, 0}
+    };
+    
     Vertex start(0, 0);
     Vertex goal(4, 4);
+    
     while (rclcpp::ok()) {
         switch (Initial_state) { 
             case Recieve_State: {
-                std::vector<float>camera_data=node->get_camera_data();
+                std::vector<float> camera_data = node->get_camera_data(); // Fixed spacing
                 node->reset_data_flag(); // Reset the flag
+                
                 while (!node->is_data_available()) {
                     rclcpp::spin_some(node); // Process callbacks to check for data
-                    std::vector<float>camera_data=node->get_camera_data();
+                    camera_data = node->get_camera_data(); // Moved to avoid duplicate calls
                 }
-                if (node->get_setup_flag()){
-                    Initial_state=Setup_State;
-                    node->set_setup_flag(false);
-                }
-                else {
-                     Initial_state=IMU_State;
-                } 
-            }
-            case Setup_State:
-            {
-            // Define a grid for path planning
                 
-            // Define start and goal vertices
-            
-            // Convert grid to vertices for the path planning algorithm
-            std::vector<std::vector<Vertex>> grid_vertex = robotic.fillGridWithVertices(grid);
-            // Run the A* algorithm and get the path
-            std::vector<std::pair<float, float>> path = robotic.a_star_algorithm(&start, &goal, grid_vertex);
-            node->set_path(path);
-            std::cout<< "Setup state is working" <<std::endl;
-            Initial_state=IMU_State;
+                if (node->get_setup_flag()) {
+                    Initial_state = Setup_State;
+                    node->set_setup_flag(false);
+                } else {
+                    Initial_state = IMU_State;
+                } 
+                break; // Added break statement to prevent fall-through
             }
-            case IMU_State:
-            {
 
-                Initial_state=Object_Depth_State;
+            case Setup_State: {
+                // Convert grid to vertices for the path planning algorithm
+                std::vector<std::vector<Vertex>> grid_vertex = robotic.fillGridWithVertices(grid);
+                // Run the A* algorithm and get the path
+                std::vector<std::pair<float, float>> path = robotic.a_star_algorithm(&start, &goal, grid_vertex);
+                node->set_path(path);
+                std::cout << "Setup state is working" << std::endl;
+                Initial_state = IMU_State;
+                break; // Added break statement
             }
-            case Object_Depth_State:
-            {
+            case IMU_State: {
+                rclcpp::spin(node);
+                std::vector<float> imu_data;
+                // Check if we have enough camera data for IMU (at least 11 elements)
+                
+                    // Reserve space for IMU data
+                    imu_data.reserve(camera_data.size() - 11);
+                    std::copy(camera_data.begin() + 11, camera_data.end(), std::back_inserter(imu_data));
+                    for (int i =0; i < camera_data.size(); i++){
+                        std::cout<< camera_data[i] << std::endl;
+                    }
+                    std::cout << "imu data" << std::endl;
+                    Initial_state = Object_Depth_State;
+                
+                 break; // Added break statement
+            }
+            case Object_Depth_State: {
+                Initial_state = Error_Kinematic_State;
+                break; // Added break statement
+            }
 
-                Initial_state=Error_Kinematic_State;
+            case Error_Kinematic_State: {
+                Initial_state = Initial_Path_Planning_State;
+                break; // Added break statement
             }
-            case Error_Kinematic_State:
-            {
 
-                Initial_state=Initial_Path_Planning_State;
-            }
-            case Initial_Path_Planning_State:
-            {
+            case Initial_Path_Planning_State: {
                 // Define a grid for path planning
                 std::vector<std::vector<float>> grid = {
                     {0, 0, 0, 0, 0},
@@ -359,40 +384,44 @@ int main(int argc, char* argv[]) {
                     {0, 1, 1, 1, 0},
                     {0, 0, 0, 0, 0}
                 };
-                // Define start and goal vertices
-                Vertex start(0, 0);
-                Vertex goal(4, 4);
+                
                 // Convert grid to vertices for the path planning algorithm
                 std::vector<std::vector<Vertex>> grid_vertex = robotic.fillGridWithVertices(grid);
+                
                 // Run the A* algorithm and get the path
                 std::vector<std::pair<float, float>> path = robotic.a_star_algorithm(&start, &goal, grid_vertex);
                 node->set_path(path);
-                Initial_state=Kinematic_Adjustment_State;
+                Initial_state = Kinematic_Adjustment_State;
+                break; // Added break statement
             }
-            case Kinematic_Adjustment_State:
-            {
 
-                Initial_state=Smooth_Out_State;
+            case Kinematic_Adjustment_State: {
+                Initial_state = Smooth_Out_State;
+                break; // Added break statement
             }
-            case Smooth_Out_State:
-            {
 
-                Initial_state=Send_State;
+            case Smooth_Out_State: {
+                Initial_state = Send_State;
+                break; // Added break statement
             }
-            case Send_State:
-            {
+
+            case Send_State: {
                 node->start_publishing();
                 // Spin the node to keep it alive and responding to callbacks
                 rclcpp::spin(node);
-                Initial_state=Recieve_State;
+                Initial_state = Recieve_State;
+                break; // Added break statement
             }
+
             default:
-                Initial_state=Recieve_State;
+                Initial_state = Recieve_State; // Default case to handle any undefined state
+                break; // Added break statement
         }
     }
     // Shutdown ROS gracefully
     rclcpp::shutdown();
     return 0;
 }
+
 
 
