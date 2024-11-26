@@ -28,6 +28,7 @@ private:
 };
 
 Serial_Protocal::Serial_Protocal(): serial(io_service) {
+    //Opening the serial port
     try {
         std::cout << "Attempting to open serial port..." << std::endl;
         serial.open("/dev/ttyACM0");
@@ -50,6 +51,7 @@ Serial_Protocal::Serial_Protocal(): serial(io_service) {
     }
 }
 
+//Write angular position and direction to serial
 void Serial_Protocal::protocal_write(float angular_position, float angular_direction) {
     try {
         char data[sizeof(float)* 2];
@@ -64,6 +66,7 @@ void Serial_Protocal::protocal_write(float angular_position, float angular_direc
     }
 }
 
+//Read from serial
 std::string Serial_Protocal::protocal_read() {
    #define BUFSIZE 1
 
