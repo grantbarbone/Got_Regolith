@@ -23,9 +23,12 @@
 #include <unordered_map>
 //#include <unordered_s::_1;
 
+//Constants
 enum Robot_Pathing_State{
       Update_State, Recieve_State, Setup_State, Camera_State, IMU_State, Object_Depth_State, Error_Kinematic_State, Check_Point_State, Kinematic_Adjustment_State, Smooth_Out_State, Send_State
 };
+
+//Writes coordinates in a file
 void write_data(float x, float y) {
     int fd = open("store_coord.txt", O_RDWR| O_CREAT |O_TRUNC, 0666);
     if (fd == -1) {
@@ -39,6 +42,8 @@ void write_data(float x, float y) {
         close(fd);
     }
 }
+
+//Reads coordinates from a file
 std::vector<float> read_data(){ 
    int fd=open("store_coord.txt", O_RDONLY);
     if (fd==-1){
@@ -52,7 +57,8 @@ std::vector<float> read_data(){
         close(fd);
     }
     std::string str(buffer);
-    
+
+    //Returns a specific point read from the file
     float point1, point2;
     std::istringstream iss(buffer);
     if (iss>> point1 >> point2){
@@ -114,7 +120,7 @@ int main(int argc, char* argv[]) {
     std::chrono::time_point<std::chrono::high_resolution_clock>  end;
     std::chrono::duration<double> elapsed;
     std::chrono::high_resolution_clock::time_point start;
-    std::vector<std::vector<float>> grid = {
+    std::vector<std::vector<float>> grid = { //Grid for path planning
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,},
@@ -132,7 +138,7 @@ int main(int argc, char* argv[]) {
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,}
     };
 
-    std::vector<std::vector<Vertex>> grid_vertex = robotic.fillGridWithVertices(grid);
+    std::vector<std::vector<Vertex>> grid_vertex = robotic.fillGridWithVertices(grid); //Fill grid with vertices
     Vertex object_detected=grid_vertex[0][0];
     std::vector<std::pair<float, float>> path;
     std::vector<std::pair<float, float>> set_points = {{10, 7}, {13, 9}, {6, 12}, {5, 4}, {4, 4}}; 
@@ -142,8 +148,8 @@ int main(int argc, char* argv[]) {
     Robot_Pathing_State Initial_state= Setup_State;
 
     while(true){
-        switch (Initial_state) { 
-            case Setup_State: {
+        switch (Initial_state) { //Switch statement involving different states of the rover
+            case Setup_State: { //Sets up the rover with start and end points
                 std::cout << "Setup State: " << std::endl;
                 
                 std::vector <float>data_stored=read_data();
@@ -198,7 +204,7 @@ int main(int argc, char* argv[]) {
                 Initial_state = Camera_State;
                 break; // Added break statement
             }
-            case Check_Point_State: {
+            case Check_Point_State: { //Checks the current position of the rover
                 std::cout << "Check Point State:" << std::endl;
 
                 if (!set_points.empty()){
@@ -224,7 +230,7 @@ int main(int argc, char* argv[]) {
                 Initial_state = IMU_State;
                 break; // Added break statement
             }
-            case Camera_State: {
+            case Camera_State: { //Opens the camera and checks for obstacles
                 std::cout << "Camera State: " << std::endl;
         
                 Zed.zed_open_camera();
@@ -268,7 +274,7 @@ int main(int argc, char* argv[]) {
                 Initial_state = IMU_State;
                 break; // Added break statement
             }
-            case IMU_State: {
+            case IMU_State: { //Checks the IMU data for current position of the rover to use with the path planning
 
                 std::cout << "IMU State:" << std::endl;
                 
@@ -318,7 +324,7 @@ int main(int argc, char* argv[]) {
                 Initial_state = Update_State;
                 break; // Added break statement
             }
-            case Object_Depth_State: {
+            case Object_Depth_State: { //Checks the depth of obstacles
                 std::cout << "Object Depth State " << std::endl;
                 last_point=path[0];
 
@@ -395,7 +401,7 @@ int main(int argc, char* argv[]) {
                 Initial_state = Send_State;
                 break; // Added break statement
             }
-            case Update_State: {
+            case Update_State: { //Updates the path planning grid
  
                 std::cout << "Update State:" << std::endl;
                 std::cout << imu_X << std::endl;
@@ -422,12 +428,12 @@ int main(int argc, char* argv[]) {
                 Initial_state=Error_Kinematic_State;
                 break;
             }
-            case Error_Kinematic_State: {
+            case Error_Kinematic_State: { //Fixes the rover's state
                 //std::cout << "Error Adjustment State:" << std::endl;
                 Initial_state = Object_Depth_State;
                 break; // Added break statement
             }
-            case Send_State: {
+            case Send_State: { //Sends the data to the motor drivers
                 std::cout << "Send State:" << std::endl;
                 if (start_rover==false){
                     last_point=path[1];
