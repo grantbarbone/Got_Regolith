@@ -164,43 +164,42 @@ std::vector<std::pair<float, float>> RoboticPathPlanning::a_star_algorithm(Verte
     std::priority_queue<Vertex*, std::vector<Vertex*>, CompareVertex> open_list; //create the open list
     start->path_cost = 0; //set the path cost to zero
     start->euclidean_cost = RoboticPathPlanning::euclidean_calculation(*start, *goal); //calculate the initial euclidean cost
-    open_list.push(start); 
+    open_list.push(start); //add start to the open list
     
-    while (!open_list.empty()) {
+    while (!open_list.empty()) { //while loop until open_list is empty
         
-        Vertex* current = open_list.top();
+        Vertex* current = open_list.top(); //store the top of the open_list into the Vertex pointer current.
         
-        open_list.pop();
+        open_list.pop(); //pop the top.
        
-        if (current->x == goal->x && current->y == goal->y) {
-            
-            std::vector<std::pair<float, float>> path;
-            while (current) {
+        if (current->x == goal->x && current->y == goal->y) { //check if the current coordinate is the goal coordinate.
+            std::vector<std::pair<float, float>> path; //create path data srtucture.
+            while (current) { //while current is not empty
              //   std::cout << current->x << std::endl;
                //  std::cout << current->y << std::endl;
-                path.push_back({current->x, current->y});
-                current = current->parent;
-            }
-            std::reverse(path.begin(), path.end());
-            return path;
-        }
+                path.push_back({current->x, current->y}); //push back current x, and current y into the path
+                current = current->parent; //Equal the current to its parent
+            } //endwhile
+            std::reverse(path.begin(), path.end()); //begin the path, end the path.
+            return path; //return the path
+        } //endif
          
-        current->closed = true;
+        current->closed = true; //current closed is now set to true
        
-        std::priority_queue<Vertex*, std::vector<Vertex*>, CompareVertex> neighbors = getNeighbors(current, goal, grid);
+        std::priority_queue<Vertex*, std::vector<Vertex*>, CompareVertex> neighbors = getNeighbors(current, goal, grid); //Set the priority queue for the Vertex*.
         
-        while (!neighbors.empty()) {
+        while (!neighbors.empty()) { //while loop until the neighbor is empty.
             
-            Vertex* neighbor = neighbors.top();
-            neighbors.pop();
-            neighbor->parent = current;
-            open_list.push(neighbor);
+            Vertex* neighbor = neighbors.top(); //The store the top of the code to the vertex neighbor
+            neighbors.pop(); //Pop the top neighbor
+            neighbor->parent = current; //set the current pointer to the parent.
+            open_list.push(neighbor); //store the neighbor.
             //std::cout << current->x << " This is the x: " <<current->y << " This is the y: "<< std::endl;
-        }
+        } //endwhile
        
-    }
+    } //endwhile
 
-    return std::vector<std::pair<float, float>>();
-}
+    return std::vector<std::pair<float, float>>(); //return the vector path
+} //endfunc
 
 #endif 
